@@ -1,36 +1,39 @@
 use hecs::{ComponentError, Entity, World};
-use std::collections::HashMap;
+use rkyv::{Archive, Deserialize, Serialize};
+use std::{collections::HashMap, num::NonZeroU64};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Archive, Serialize, Deserialize)]
 pub struct Velocity {
     pub dx: f32,
     pub dy: f32,
 }
 
 // Position component
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Archive, Serialize, Deserialize)]
 pub struct Position {
     pub x: f32,
     pub y: f32,
 }
 
 // Team component
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Archive, Serialize, Deserialize)]
 pub enum Team {
     Red,
     Blue,
 }
 
 // Player component
-#[derive(Debug)]
-pub struct Player {
+#[derive(Debug, Clone, Archive, Serialize, Deserialize)]
+pub struct Metadata {
     pub name: String,
 }
 
+type EntityBits = NonZeroU64;
+
 // Flag component
-#[derive(Debug)]
-pub struct Flag {
-    pub held_by: Option<Entity>,
+#[derive(Debug, Clone, Archive, Serialize, Deserialize)]
+pub struct Item {
+    pub held_by: Option<EntityBits>,
 }
 
 // Game struct that uses hecs ECS
@@ -59,11 +62,34 @@ const BLUE_TEAM: TeamConfig = TeamConfig {
     spawn_position: Position { x: 195.0, y: 95.0 },
 };
 
+#[derive(Debug, Archive, Serialize, Deserialize)]
 pub enum Input {
     PlayerMove {
-        player_id: Entity,
+        player_id: EntityBits,
         velocity: Velocity,
     },
+}
+
+#[derive(Debug, Archive, Serialize, Deserialize, Clone)]
+pub struct Player {
+    pub metadata: Metadata,
+    pub position: Position,
+    pub velocity: Velocity,
+    pub team: Team,
+}
+
+#[derive(Debug, Archive, Serialize, Deserialize, Clone)]
+pub struct Flag {
+    pub position: Position,
+    pub team: Team,
+    pub item: Item,
+}
+
+// All the data that needs to be sent to the client to render the game
+#[derive(Debug, Archive, Serialize, Deserialize, Clone)]
+pub struct Snapshot {
+    pub players: Vec<Player>,
+    pub flags: Vec<Flag>,
 }
 
 impl Game {
@@ -72,7 +98,7 @@ impl Game {
 
         // Create flags
         let red_flag = world.spawn((
-            Flag { held_by: None },
+            Item { held_by: None },
             Position {
                 x: RED_TEAM.flag_position.x,
                 y: RED_TEAM.flag_position.y,
@@ -81,7 +107,7 @@ impl Game {
         ));
 
         let blue_flag = world.spawn((
-            Flag { held_by: None },
+            Item { held_by: None },
             Position {
                 x: BLUE_TEAM.flag_position.x,
                 y: BLUE_TEAM.flag_position.y,
@@ -96,6 +122,32 @@ impl Game {
             player_map: HashMap::new(),
         }
     }
+    pub fn make_snapshot(&self) -> Snapshot {
+        let players = self
+            .world
+            .query::<(&Metadata, &Position, &Team, &Velocity)>()
+            .into_iter()
+            .map(|(_, (metadata, position, team, velocity))| Player {
+                metadata: metadata.clone(),
+                position: position.clone(),
+                velocity: velocity.clone(),
+                team: team.clone(),
+            })
+            .collect();
+
+        let flags = self
+            .world
+            .query::<(&Item, &Position, &Team)>()
+            .into_iter()
+            .map(|(_, (item, position, team))| Flag {
+                position: position.clone(),
+                team: team.clone(),
+                item: item.clone(),
+            })
+            .collect();
+
+        Snapshot { players, flags }
+    }
 
     pub fn add_player(&mut self, name: String, team: Team) -> Entity {
         let start_x = match team {
@@ -109,7 +161,7 @@ impl Game {
         };
 
         let player = self.world.spawn((
-            Player { name: name.clone() },
+            Metadata { name: name.clone() },
             Position {
                 x: start_x,
                 y: start_y,
@@ -129,7 +181,8 @@ impl Game {
                 velocity,
                 player_id,
             } => {
-                let mut player_velocity = self.world.get::<&mut Velocity>(player_id)?;
+                let entity = Entity::from_bits(player_id.get()).unwrap();
+                let mut player_velocity = self.world.get::<&mut Velocity>(entity)?;
                 player_velocity.dx = velocity.dx;
                 player_velocity.dy = velocity.dy;
             }

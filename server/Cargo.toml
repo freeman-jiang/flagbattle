@@ -7,3 +7,4 @@ edition = "2024"
 axum = { version = "0.8.4", features = ["ws"] }
 tokio = { version = "1.44.2", features = ["full"] }
 futures-util = "0.3.31"
+game = { path = "../game" }
