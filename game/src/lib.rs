@@ -59,6 +59,13 @@ const BLUE_TEAM: TeamConfig = TeamConfig {
     spawn_position: Position { x: 195.0, y: 95.0 },
 };
 
+pub enum Input {
+    PlayerMove {
+        player_id: Entity,
+        velocity: Velocity,
+    },
+}
+
 impl Game {
     pub fn new() -> Self {
         let mut world = World::new();
@@ -116,21 +123,24 @@ impl Game {
     }
 
     // Set player's movement intent
-    pub fn set_player_velocity(
-        &mut self,
-        player_id: Entity,
-        dx: f32,
-        dy: f32,
-    ) -> Result<(), ComponentError> {
-        let mut velocity = self.world.get::<&mut Velocity>(player_id)?;
-        velocity.dx = dx;
-        velocity.dy = dy;
+    pub fn apply_input(&mut self, input: Input) -> Result<(), ComponentError> {
+        match input {
+            Input::PlayerMove {
+                velocity,
+                player_id,
+            } => {
+                let mut player_velocity = self.world.get::<&mut Velocity>(player_id)?;
+                player_velocity.dx = velocity.dx;
+                player_velocity.dy = velocity.dy;
+            }
+        }
+
         Ok(())
     }
 
     // Update the game state based on the delta time (frame-independently)
     // Delta time is the time elapsed between the current frame and the previous frame in a game loop
-    pub fn update(&mut self, dt: f32) {
+    pub fn step(&mut self, dt: f32) {
         // Apply velocities to positions
         for (_entity, (position, velocity)) in self.world.query_mut::<(&mut Position, &Velocity)>()
         {

@@ -1,4 +1,4 @@
-use game::{Game, Position, Team, Velocity};
+use game::{Game, Input, Position, Team, Velocity};
 use std::{
     thread,
     time::{Duration, Instant},
@@ -13,7 +13,11 @@ fn main() {
     let player2 = game.add_player("Player2".to_string(), Team::Blue);
 
     // Set initial velocity for player1 (moving toward blue flag)
-    game.set_player_velocity(player1, 1.0, 1.0).unwrap();
+    game.apply_input(Input::PlayerMove {
+        velocity: Velocity { dx: 1.0, dy: 1.0 },
+        player_id: player1,
+    })
+    .unwrap();
 
     // Simple game loop
     let mut last_time = Instant::now();
@@ -26,7 +30,7 @@ fn main() {
         last_time = current_time;
 
         // Update game state
-        game.update(dt);
+        game.step(dt);
 
         // Print game state every 10 frames
         print_game_state(&game, player1, player2);
