@@ -1,5 +1,7 @@
+use std::sync::Arc;
 use std::time::Duration;
 
+use axum::extract::State;
 use axum::response::IntoResponse;
 use axum::{
     Router,
@@ -12,7 +14,15 @@ use tokio::sync::{broadcast, mpsc};
 
 const TICK_RATE: f32 = 1.0;
 
-pub async fn handle_socket(mut socket: WebSocket) {
+#[derive(Debug)]
+pub struct ServerState {
+    pub input_tx: mpsc::UnboundedSender<Input>,
+    pub snapshot_rx: broadcast::Receiver<Snapshot>,
+}
+
+pub type SharedServerState = Arc<ServerState>;
+
+pub async fn handle_socket(mut socket: WebSocket, shared_server_state: SharedServerState) {
     // Echo incoming text messages back to the client
     while let Some(Ok(msg)) = socket.next().await {
         if let Message::Text(text) = msg {
@@ -24,9 +34,9 @@ pub async fn handle_socket(mut socket: WebSocket) {
     }
 }
 
-async fn game_loop(
+async fn run_game_loop(
     mut inbox: mpsc::UnboundedReceiver<Input>,
-    snap_tx: broadcast::Sender<Snapshot>,
+    snapshot_tx: broadcast::Sender<Snapshot>,
 ) {
     let mut game = Game::new(); // <-- exclusive owner
     let mut tick = tokio::time::interval(Duration::from_secs_f32(TICK_RATE));
@@ -41,16 +51,28 @@ async fn game_loop(
 
         game.step(TICK_RATE);
 
-        let _ = snap_tx.send(game.make_snapshot()); // lagging clients drop
+        let _ = snapshot_tx.send(game.make_snapshot()); // lagging clients drop
     }
 }
 
 #[tokio::main]
 async fn main() {
+    let (snapshot_tx, snapshot_rx) = broadcast::channel(16);
+    let (input_tx, input_rx) = mpsc::unbounded_channel();
+
+    let game_loop_handle = tokio::spawn(run_game_loop(input_rx, snapshot_tx));
+
+    // Allows speaking with the game
+    let shared_server_state = Arc::new(ServerState {
+        input_tx,
+        snapshot_rx,
+    });
+
     // build our application with a websocket route
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
-        .route("/ws", get(ws_handler));
+        .route("/ws", get(ws_handler))
+        .with_state(shared_server_state);
 
     // run our app with hyper, listening globally on port 8080
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
@@ -58,6 +80,9 @@ async fn main() {
     axum::serve(listener, app).await.unwrap();
 }
 
-async fn ws_handler(ws: WebSocketUpgrade) -> impl IntoResponse {
-    ws.on_upgrade(handle_socket)
+async fn ws_handler(
+    ws: WebSocketUpgrade,
+    State(server_state): State<SharedServerState>,
+) -> impl IntoResponse {
+    ws.on_upgrade(move |socket| handle_socket(socket, server_state))
 }
