@@ -8,3 +8,4 @@ axum = { version = "0.8.4", features = ["ws"] }
 tokio = { version = "1.44.2", features = ["full"] }
 futures-util = "0.3.31"
 game = { path = "../game" }
+rkyv = {version = "=0.8.10", features = ["bytecheck", "alloc"]} # MUST BE THE SAME AS GAME Cargo.toml

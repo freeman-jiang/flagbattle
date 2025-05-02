@@ -10,7 +10,8 @@ use axum::{
 };
 use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
-use game::{Game, Input, Snapshot};
+use game::{ArchivedSnapshot, Game, Input, Snapshot};
+use rkyv::rancor::Error;
 use tokio::sync::{broadcast, mpsc};
 
 const TICK_RATE: f32 = 1.0;
@@ -54,8 +55,33 @@ async fn forward_player_inputs(
     input_tx: mpsc::UnboundedSender<Input>,
 ) {
     while let Some(Ok(input)) = ws_receiver.next().await {
-        if let Message::Text(text) = input {
-            println!("Received message: {}", text);
+        if let Message::Binary(bytes) = input {
+            println!("Received bytes: {}", bytes.len());
+
+            // Deserialize the bytes into an Input
+            let archived = match rkyv::access::<ArchivedSnapshot, Error>(&bytes) {
+                Ok(archived) => archived,
+                Err(e) => {
+                    println!("Failed to access archived snapshot: {}", e);
+                    continue;
+                }
+            };
+
+            let snapshot = match rkyv::deserialize::<Snapshot, Error>(archived) {
+                Ok(snapshot) => snapshot,
+                Err(e) => {
+                    println!("Failed to deserialize snapshot: {}", e);
+                    continue;
+                }
+            };
+
+            // Successfully deserialized the snapshot
+            println!("Deserialized snapshot:");
+            dbg!(&snapshot);
+
+            // TODO: Send the input to the game
+        } else {
+            println!("Received non-binary message: {:?}", input);
         }
     }
 

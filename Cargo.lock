@@ -818,6 +818,7 @@ dependencies = [
  "axum",
  "futures-util",
  "game",
+ "rkyv",
  "tokio",
 ]
 
