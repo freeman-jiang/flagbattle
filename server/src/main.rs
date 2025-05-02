@@ -1,3 +1,5 @@
+use std::io::Read;
+use std::str::Bytes;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -39,15 +41,14 @@ pub async fn handle_socket(mut socket: WebSocket, shared_server_state: SharedSer
 
 async fn receive_game_snapshots(
     mut ws_sender: SplitSink<WebSocket, Message>,
-    snapshot_rx: broadcast::Receiver<Snapshot>,
+    mut snapshot_rx: broadcast::Receiver<Snapshot>,
 ) {
-    // while let Ok(snapshot) = snapshot_rx.try_recv() {
-    //     // TODO: Use rkyv to serialize the snapshot
-    //     ws_sender
-    //         .send(Message::Text(snapshot.to_string()))
-    //         .await
-    //         .unwrap();
-    // }
+    while let Ok(snapshot) = snapshot_rx.try_recv() {
+        let serialized_bytes = rkyv::to_bytes::<Error>(&snapshot).unwrap();
+        let axum_bytes: axum::body::Bytes = serialized_bytes.into_vec().into();
+
+        ws_sender.send(Message::Binary(axum_bytes)).await.unwrap();
+    }
 }
 
 async fn forward_player_inputs(
