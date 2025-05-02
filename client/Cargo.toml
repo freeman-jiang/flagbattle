@@ -8,7 +8,7 @@ crate-type = ["cdylib", "rlib"]
 path = "src/lib.rs"
 
 [[bin]]
-name = "client"
+name = "client-bin"
 path = "src/main.rs"
 
 [dependencies]
@@ -28,3 +28,4 @@ web-sys = { version = "0.3.66", features = [
 ]}
 wasm-bindgen-futures = "0.4.39"
 futures-util = "0.3.30"
+macroquad = "0.4.14"

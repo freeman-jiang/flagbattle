@@ -1,98 +1,22 @@
-use client::console_error_panic_hook;
-use std::io::{self, Write};
-use std::thread;
-use std::time::{Duration, Instant};
+//! Macroquad expose all the logging macros.
+//! They will use browser console, android console or just stdout depending on the platform.
+//! Those macros are the recommended way to output debug traces and logs.
 
-fn main() {
-    println!("WebSocket Game Client - Native Testing Environment");
-    println!("==================================================");
-    println!("This binary provides a testing environment for the game logic.");
-    println!("The actual WebAssembly client can be built with 'wasm-pack build --target web'.");
-    println!();
+use macroquad::prelude::*;
 
-    // Demo of a simple square that can be moved with WASD in the console
-    let mut x = 10;
-    let mut y = 10;
-    let width = 40;
-    let height = 20;
+#[macroquad::main("Logs")]
+async fn main() {
+    // debug!("This is a debug message");
+    // dbg!("This is a debug message");
+    // info!("and info message");
+    // error!("and errors, the red ones!");
+    // warn!("Or warnings, the yellow ones.");
 
-    // Track key states (W, A, S, D)
-    let mut keys = [false, false, false, false];
+    loop {
+        clear_background(LIGHTGRAY);
 
-    println!("Controls: W/A/S/D to move, Q to quit");
-    println!("Press Enter after each key");
+        info!("Still alive!");
 
-    let mut running = true;
-    while running {
-        // Clear screen (in a primitive way)
-        print!("\x1B[2J\x1B[1;1H");
-
-        // Draw the board
-        let mut board = vec![vec![' '; width]; height];
-
-        // Draw the player square
-        for i in 0..3 {
-            for j in 0..3 {
-                if y + i < height && x + j < width {
-                    board[y + i][x + j] = '■';
-                }
-            }
-        }
-
-        // Draw the board
-        for row in &board {
-            for &cell in row {
-                print!("{}", cell);
-            }
-            println!();
-        }
-
-        println!("\nPosition: x={}, y={}", x, y);
-        println!("Enter move (W/A/S/D) or Q to quit:");
-
-        // Get input
-        let mut input = String::new();
-        io::stdout().flush().unwrap();
-        io::stdin().read_line(&mut input).unwrap();
-
-        // Process input
-        match input.trim().to_lowercase().as_str() {
-            "w" => {
-                if y > 0 {
-                    y -= 1;
-                }
-                keys = [true, false, false, false];
-            }
-            "a" => {
-                if x > 0 {
-                    x -= 1;
-                }
-                keys = [false, true, false, false];
-            }
-            "s" => {
-                if y < height - 3 {
-                    y += 1;
-                }
-                keys = [false, false, true, false];
-            }
-            "d" => {
-                if x < width - 3 {
-                    x += 1;
-                }
-                keys = [false, false, false, true];
-            }
-            "q" => running = false,
-            _ => {}
-        }
-
-        // Simulate what would happen in WebSocket
-        let message = format!("{{\"x\":{},\"y\":{}}}", x, y);
-        println!("Would send to server: {}", message);
-
-        // Small delay
-        thread::sleep(Duration::from_millis(50));
+        next_frame().await
     }
-
-    println!("Native test client closed.");
 }
-
