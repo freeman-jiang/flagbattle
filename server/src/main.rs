@@ -6,6 +6,9 @@ use axum::{
 };
 use futures_util::{SinkExt, StreamExt};
 
+// Declare modules
+mod websocket;
+
 #[tokio::main]
 async fn main() {
     // build our application with a websocket route
@@ -20,17 +23,5 @@ async fn main() {
 }
 
 async fn ws_handler(ws: WebSocketUpgrade) -> impl IntoResponse {
-    ws.on_upgrade(handle_socket)
-}
-
-async fn handle_socket(mut socket: WebSocket) {
-    // Echo incoming text messages back to the client
-    while let Some(Ok(msg)) = socket.next().await {
-        if let Message::Text(text) = msg {
-            println!("Received message: {}", text);
-            if socket.send(Message::Text(text)).await.is_err() {
-                break; // client disconnected
-            }
-        }
-    }
+    ws.on_upgrade(websocket::handle_socket)
 }
