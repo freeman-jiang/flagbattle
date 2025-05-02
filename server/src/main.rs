@@ -8,6 +8,7 @@ use axum::{
     extract::ws::{Message, WebSocket, WebSocketUpgrade},
     routing::get,
 };
+use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
 use game::{Game, Input, Snapshot};
 use tokio::sync::{broadcast, mpsc};
@@ -23,15 +24,42 @@ pub struct ServerState {
 pub type SharedServerState = Arc<ServerState>;
 
 pub async fn handle_socket(mut socket: WebSocket, shared_server_state: SharedServerState) {
-    // Echo incoming text messages back to the client
-    while let Some(Ok(msg)) = socket.next().await {
-        if let Message::Text(text) = msg {
+    let (mut ws_sender, mut ws_receiver) = socket.split();
+
+    // TODO: Allow for multiple concurrent games | here should send message to game manager
+
+    tokio::spawn(receive_game_snapshots(
+        ws_sender,
+        shared_server_state.snapshot_rx.resubscribe(),
+    ));
+
+    forward_player_inputs(ws_receiver, shared_server_state.input_tx.clone()).await;
+}
+
+async fn receive_game_snapshots(
+    mut ws_sender: SplitSink<WebSocket, Message>,
+    snapshot_rx: broadcast::Receiver<Snapshot>,
+) {
+    // while let Ok(snapshot) = snapshot_rx.try_recv() {
+    //     // TODO: Use rkyv to serialize the snapshot
+    //     ws_sender
+    //         .send(Message::Text(snapshot.to_string()))
+    //         .await
+    //         .unwrap();
+    // }
+}
+
+async fn forward_player_inputs(
+    mut ws_receiver: SplitStream<WebSocket>,
+    input_tx: mpsc::UnboundedSender<Input>,
+) {
+    while let Some(Ok(input)) = ws_receiver.next().await {
+        if let Message::Text(text) = input {
             println!("Received message: {}", text);
-            if socket.send(Message::Text(text)).await.is_err() {
-                break; // client disconnected
-            }
         }
     }
+
+    println!("Client disconnected");
 }
 
 async fn run_game_loop(
@@ -84,5 +112,6 @@ async fn ws_handler(
     ws: WebSocketUpgrade,
     State(server_state): State<SharedServerState>,
 ) -> impl IntoResponse {
+    println!("Client connected");
     ws.on_upgrade(move |socket| handle_socket(socket, server_state))
 }
