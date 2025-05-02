@@ -2,7 +2,13 @@
 //! They will use browser console, android console or just stdout depending on the platform.
 //! Those macros are the recommended way to output debug traces and logs.
 
-use macroquad::prelude::*;
+use macroquad::window::Conf;
+use macroquad::{
+    color::{Color, BLACK, BLUE, DARKGRAY, RED, WHITE},
+    input::{self, KeyCode},
+    math::{Rect, Vec2},
+    shapes, text, time, window,
+};
 
 // Game constants
 const PLAYER_SIZE: f32 = 20.0;
@@ -11,6 +17,19 @@ const WALL_COLOR: Color = DARKGRAY;
 const FLAG_SIZE: f32 = 15.0;
 const RED_BASE_COLOR: Color = Color::new(0.9, 0.2, 0.2, 0.5);
 const BLUE_BASE_COLOR: Color = Color::new(0.2, 0.2, 0.9, 0.5);
+
+// Window configuration for higher quality rendering
+fn window_conf() -> Conf {
+    Conf {
+        window_title: "Capture The Flag".to_string(),
+        window_width: 3456,
+        window_height: 2234,
+        high_dpi: true,
+        fullscreen: true,
+        sample_count: 4, // MSAA (Multi-Sample Anti-Aliasing) with 4 samples
+        ..Default::default()
+    }
+}
 
 // Game entities
 struct Player {
@@ -59,7 +78,7 @@ impl Player {
             Team::Red => RED,
             Team::Blue => BLUE,
         };
-        draw_circle(self.pos.x, self.pos.y, PLAYER_SIZE, color);
+        shapes::draw_circle(self.pos.x, self.pos.y, PLAYER_SIZE, color);
 
         // Show if player has flag
         if self.has_flag {
@@ -67,23 +86,23 @@ impl Player {
                 Team::Red => BLUE, // Carrying enemy flag
                 Team::Blue => RED, // Carrying enemy flag
             };
-            draw_circle(self.pos.x, self.pos.y, PLAYER_SIZE / 2.0, flag_color);
+            shapes::draw_circle(self.pos.x, self.pos.y, PLAYER_SIZE / 2.0, flag_color);
         }
     }
 
     fn update(&mut self, dt: f32, walls: &[Wall]) {
         let mut movement = Vec2::new(0.0, 0.0);
 
-        if is_key_down(KeyCode::Up) || is_key_down(KeyCode::W) {
+        if input::is_key_down(KeyCode::Up) || input::is_key_down(KeyCode::W) {
             movement.y -= 1.0;
         }
-        if is_key_down(KeyCode::Down) || is_key_down(KeyCode::S) {
+        if input::is_key_down(KeyCode::Down) || input::is_key_down(KeyCode::S) {
             movement.y += 1.0;
         }
-        if is_key_down(KeyCode::Left) || is_key_down(KeyCode::A) {
+        if input::is_key_down(KeyCode::Left) || input::is_key_down(KeyCode::A) {
             movement.x -= 1.0;
         }
-        if is_key_down(KeyCode::Right) || is_key_down(KeyCode::D) {
+        if input::is_key_down(KeyCode::Right) || input::is_key_down(KeyCode::D) {
             movement.x += 1.0;
         }
 
@@ -113,9 +132,9 @@ impl Player {
 
         // Check screen boundaries
         let out_of_bounds = new_pos.x < PLAYER_SIZE
-            || new_pos.x > screen_width() - PLAYER_SIZE
+            || new_pos.x > window::screen_width() - PLAYER_SIZE
             || new_pos.y < PLAYER_SIZE
-            || new_pos.y > screen_height() - PLAYER_SIZE;
+            || new_pos.y > window::screen_height() - PLAYER_SIZE;
 
         if !collision && !out_of_bounds {
             self.pos = new_pos;
@@ -144,13 +163,13 @@ impl Flag {
             // Draw flag as a triangle
             let x = self.pos.x;
             let y = self.pos.y;
-            draw_triangle(
+            shapes::draw_triangle(
                 Vec2::new(x, y - FLAG_SIZE),
                 Vec2::new(x, y + FLAG_SIZE),
                 Vec2::new(x + FLAG_SIZE * 1.5, y),
                 color,
             );
-            draw_line(x, y - FLAG_SIZE, x, y + FLAG_SIZE, 3.0, DARKGRAY);
+            shapes::draw_line(x, y - FLAG_SIZE, x, y + FLAG_SIZE, 3.0, DARKGRAY);
         }
     }
 
@@ -167,10 +186,10 @@ impl Game {
 
         // Central barriers
         walls.push(Wall {
-            rect: Rect::new(screen_width() / 2.0 - 10.0, 100.0, 20.0, 200.0),
+            rect: Rect::new(window::screen_width() / 2.0 - 10.0, 100.0, 20.0, 200.0),
         });
         walls.push(Wall {
-            rect: Rect::new(screen_width() / 2.0 - 10.0, 400.0, 20.0, 200.0),
+            rect: Rect::new(window::screen_width() / 2.0 - 10.0, 400.0, 20.0, 200.0),
         });
 
         // Some additional walls
@@ -188,11 +207,19 @@ impl Game {
         });
 
         // Create bases and flags
-        let red_flag = Flag::new(100.0, screen_height() / 2.0, Team::Red);
-        let blue_flag = Flag::new(screen_width() - 100.0, screen_height() / 2.0, Team::Blue);
+        let red_flag = Flag::new(100.0, window::screen_height() / 2.0, Team::Red);
+        let blue_flag = Flag::new(
+            window::screen_width() - 100.0,
+            window::screen_height() / 2.0,
+            Team::Blue,
+        );
 
         Self {
-            player: Player::new(screen_width() / 4.0, screen_height() / 2.0, Team::Red),
+            player: Player::new(
+                window::screen_width() / 4.0,
+                window::screen_height() / 2.0,
+                Team::Red,
+            ),
             walls,
             red_flag,
             blue_flag,
@@ -252,12 +279,17 @@ impl Game {
         }
 
         // Check if player returned to their base with flag
-        let red_base_rect = Rect::new(0.0, 0.0, screen_width() * 0.2, screen_height());
-        let blue_base_rect = Rect::new(
-            screen_width() * 0.8,
+        let red_base_rect = Rect::new(
             0.0,
-            screen_width() * 0.2,
-            screen_height(),
+            0.0,
+            window::screen_width() * 0.2,
+            window::screen_height(),
+        );
+        let blue_base_rect = Rect::new(
+            window::screen_width() * 0.8,
+            0.0,
+            window::screen_width() * 0.2,
+            window::screen_height(),
         );
 
         if self.player.team == Team::Red
@@ -281,7 +313,7 @@ impl Game {
         }
 
         // Press space to switch teams for testing
-        if is_key_pressed(KeyCode::Space) {
+        if input::is_key_pressed(KeyCode::Space) {
             self.player.team = match self.player.team {
                 Team::Red => Team::Blue,
                 Team::Blue => Team::Red,
@@ -298,33 +330,33 @@ impl Game {
 
             // Move player to appropriate side
             match self.player.team {
-                Team::Red => self.player.pos.x = screen_width() / 4.0,
-                Team::Blue => self.player.pos.x = 3.0 * screen_width() / 4.0,
+                Team::Red => self.player.pos.x = window::screen_width() / 4.0,
+                Team::Blue => self.player.pos.x = 3.0 * window::screen_width() / 4.0,
             }
         }
     }
 
     fn draw(&self) {
         // Draw bases
-        draw_rectangle(
+        shapes::draw_rectangle(
             0.0,
             0.0,
-            screen_width() * 0.2,
-            screen_height(),
+            window::screen_width() * 0.2,
+            window::screen_height(),
             RED_BASE_COLOR,
         );
 
-        draw_rectangle(
-            screen_width() * 0.8,
+        shapes::draw_rectangle(
+            window::screen_width() * 0.8,
             0.0,
-            screen_width() * 0.2,
-            screen_height(),
+            window::screen_width() * 0.2,
+            window::screen_height(),
             BLUE_BASE_COLOR,
         );
 
         // Draw walls
         for wall in &self.walls {
-            draw_rectangle(
+            shapes::draw_rectangle(
                 wall.rect.x,
                 wall.rect.y,
                 wall.rect.w,
@@ -343,45 +375,45 @@ impl Game {
         // Draw scores
         let score_text = format!("Red: {} - Blue: {}", self.red_score, self.blue_score);
         let text_size = 30.0;
-        let text_width = measure_text(&score_text, None, text_size as u16, 1.0).width;
+        let text_width = text::measure_text(&score_text, None, text_size as u16, 1.0).width;
 
-        draw_text(
+        text::draw_text(
             &score_text,
-            screen_width() / 2.0 - text_width / 2.0,
+            window::screen_width() / 2.0 - text_width / 2.0,
             50.0,
             text_size,
             WHITE,
         );
 
         // Draw controls info
-        draw_text(
+        text::draw_text(
             "Use arrow keys or WASD to move",
             20.0,
-            screen_height() - 40.0,
+            window::screen_height() - 40.0,
             20.0,
             WHITE,
         );
-        draw_text(
+        text::draw_text(
             "Press SPACE to switch teams",
             20.0,
-            screen_height() - 20.0,
+            window::screen_height() - 20.0,
             20.0,
             WHITE,
         );
     }
 }
 
-#[macroquad::main("Capture The Flag")]
+#[macroquad::main(window_conf)]
 async fn main() {
     let mut game = Game::new();
 
     loop {
-        clear_background(BLACK);
+        window::clear_background(BLACK);
 
-        let dt = get_frame_time();
+        let dt = time::get_frame_time();
         game.update(dt);
         game.draw();
 
-        next_frame().await
+        window::next_frame().await
     }
 }
