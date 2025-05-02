@@ -1,6 +1,9 @@
-[package]
-name = "flagbattle"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+members = [
+    "game",   # contains game logic
+    "server", # contains websocket server
+    "client", # contains client code
+    "shared"  # contains shared code
+]
 
-[dependencies]
+resolver = "2"
