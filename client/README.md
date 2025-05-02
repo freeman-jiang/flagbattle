@@ -10,3 +10,8 @@ Run `./run.sh`
 - run `cargo build --target wasm32-unknown-unknown`
 - copy wasm to www folder: `cp ../target/wasm32-unknown-unknown/debug/client-bin.wasm .`
 - `basic-http-server .` (cargo install this if you don't have it)
+
+**Context:**
+
+- https://macroquad.rs/docs/
+- https://docs.rs/macroquad/latest/macroquad/index.html

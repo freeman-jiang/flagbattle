@@ -29,3 +29,5 @@ web-sys = { version = "0.3.66", features = [
 wasm-bindgen-futures = "0.4.39"
 futures-util = "0.3.30"
 macroquad = "0.4.14"
+quad-net = "0.1.2"
+game = { path = "../game" }

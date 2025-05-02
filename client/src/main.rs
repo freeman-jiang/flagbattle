@@ -1,7 +1,3 @@
-//! Macroquad expose all the logging macros.
-//! They will use browser console, android console or just stdout depending on the platform.
-//! Those macros are the recommended way to output debug traces and logs.
-
 use macroquad::window::Conf;
 use macroquad::{
     color::{Color, BLACK, BLUE, DARKGRAY, RED, WHITE},
