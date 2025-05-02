@@ -1,5 +1,3 @@
-use std::io::Read;
-use std::str::Bytes;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -26,8 +24,8 @@ pub struct ServerState {
 
 pub type SharedServerState = Arc<ServerState>;
 
-pub async fn handle_socket(mut socket: WebSocket, shared_server_state: SharedServerState) {
-    let (mut ws_sender, mut ws_receiver) = socket.split();
+pub async fn handle_socket(socket: WebSocket, shared_server_state: SharedServerState) {
+    let (ws_sender, ws_receiver) = socket.split();
 
     // TODO: Allow for multiple concurrent games | here should send message to game manager
 
@@ -43,7 +41,8 @@ async fn receive_game_snapshots(
     mut ws_sender: SplitSink<WebSocket, Message>,
     mut snapshot_rx: broadcast::Receiver<Snapshot>,
 ) {
-    while let Ok(snapshot) = snapshot_rx.try_recv() {
+    while let Ok(snapshot) = snapshot_rx.recv().await {
+        println!("Received snapshot");
         let serialized_bytes = rkyv::to_bytes::<Error>(&snapshot).unwrap();
         let axum_bytes: axum::body::Bytes = serialized_bytes.into_vec().into();
 
@@ -106,6 +105,7 @@ async fn run_game_loop(
 
         game.step(TICK_RATE);
 
+        println!("Sending snapshot");
         let _ = snapshot_tx.send(game.make_snapshot()); // lagging clients drop
     }
 }
