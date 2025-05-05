@@ -58,7 +58,8 @@ pub enum Input {
     },
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, TS)]
+#[ts(export)]
 pub struct Player {
     pub metadata: Metadata,
     pub position: Position,
@@ -66,7 +67,8 @@ pub struct Player {
     pub team: Team,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, TS)]
+#[ts(export)]
 pub struct Flag {
     pub position: Position,
     pub team: Team,
@@ -74,7 +76,8 @@ pub struct Flag {
 }
 
 // All the data that needs to be sent to the client to render the game
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, TS)]
+#[ts(export)]
 pub struct Snapshot {
     pub players: Vec<Player>,
     pub flags: Vec<Flag>,

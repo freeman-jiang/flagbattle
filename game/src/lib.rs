@@ -132,7 +132,7 @@ impl Game {
                 x: start_x,
                 y: start_y,
             },
-            Radius { values: 5.0 },
+            Radius { value: 5.0 },
             Velocity { dx: 0.0, dy: 0.0 },
             team,
         ));
