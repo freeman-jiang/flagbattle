@@ -28,14 +28,15 @@ pub type SharedServerState = Arc<ServerState>;
 #[derive(Deserialize)]
 struct ConnectParams {
     id: String,
+    team: Team,
 }
 
 pub async fn handle_socket(
     socket: WebSocket,
     shared_server_state: SharedServerState,
-    client_id: String,
+    params: ConnectParams,
 ) {
-    println!("Client ID: {}", client_id);
+    println!("Client ID: {}", params.id);
 
     let (ws_sender, ws_receiver) = socket.split();
 
@@ -46,7 +47,7 @@ pub async fn handle_socket(
         shared_server_state.snapshot_rx.resubscribe(),
     ));
 
-    forward_player_inputs(client_id, ws_receiver, shared_server_state.input_tx.clone()).await;
+    forward_player_inputs(params, ws_receiver, shared_server_state.input_tx.clone()).await;
 }
 
 async fn receive_game_snapshots(
@@ -63,15 +64,15 @@ async fn receive_game_snapshots(
 }
 
 async fn forward_player_inputs(
-    client_id: String,
+    params: ConnectParams,
     mut ws_receiver: SplitStream<WebSocket>,
     input_tx: mpsc::UnboundedSender<Input>,
 ) {
     // Send initial player assigned message
     input_tx
         .send(Input::CreatePlayer {
-            team: Team::Red,
-            id: client_id.clone(),
+            team: params.team,
+            id: params.id.clone(),
         })
         .unwrap();
 
@@ -114,7 +115,7 @@ async fn forward_player_inputs(
 
     // Inform game to remove player
     input_tx
-        .send(Input::RemovePlayer { id: client_id })
+        .send(Input::RemovePlayer { id: params.id })
         .unwrap();
 }
 
@@ -139,7 +140,11 @@ async fn run_game_loop(
 
         snapshot_count += 1;
         let elapsed = start_time.elapsed().as_secs_f32();
-        println!("Sending snapshot #{} ({:.2}s)", snapshot_count, elapsed);
+        let player_count = game.player_map.len();
+        println!(
+            "Sending snapshot #{} ({:.2}s) - Players: {}",
+            snapshot_count, elapsed, player_count
+        );
         let _ = snapshot_tx.send(game.make_snapshot()); // lagging clients drop
     }
 }
@@ -178,7 +183,6 @@ async fn ws_handler(
 
     ws.on_upgrade(move |socket| {
         let server_state = server_state.clone();
-        let client_id = params.id.clone();
-        async move { handle_socket(socket, server_state, client_id).await }
+        async move { handle_socket(socket, server_state, params).await }
     })
 }

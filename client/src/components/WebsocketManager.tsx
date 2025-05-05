@@ -11,10 +11,10 @@ export const WebsocketManager = () => {
     const setWS = useGameStore((state) => state.setWS);
     const setSnapshot = useGameStore((state) => state.setSnapshot);
     const clientId = useGameStore((state) => state.clientId);
-
+    const team = useGameStore((state) => state.team);
     useEffect(() => {
         if (!ws) {
-            const ws = new WebSocket(`ws://localhost:8080/ws?id=${clientId}`);
+            const ws = new WebSocket(`ws://localhost:8080/ws?id=${clientId}&team=${team}`);
             ws.binaryType = 'arraybuffer';
 
             ws.onopen = () => {

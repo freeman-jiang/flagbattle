@@ -140,9 +140,10 @@ impl Game {
         player_entity
     }
 
-    pub fn remove_player(&mut self, id: String) -> Result<(), NoSuchEntity> {
-        let entity = self.player_map.remove(&id).unwrap();
-        return self.world.despawn(entity);
+    pub fn remove_player(&mut self, id: String) {
+        if let Some(entity) = self.player_map.remove(&id) {
+            let _ = self.world.despawn(entity);
+        }
     }
 
     pub fn get_player(&self, id: String) -> &Entity {
@@ -155,9 +156,7 @@ impl Game {
             Input::CreatePlayer { team, id } => {
                 self.add_player(id, team);
             }
-            Input::RemovePlayer { id } => {
-                self.remove_player(id).ok();
-            }
+            Input::RemovePlayer { id } => self.remove_player(id),
             Input::PlayerMove {
                 velocity,
                 player_id,

@@ -28,6 +28,7 @@ pub struct Position {
 // Team component
 #[derive(TS, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[ts(export)]
+#[serde(rename_all = "camelCase")]
 pub enum Team {
     Red,
     Blue,
@@ -49,18 +50,17 @@ pub struct Item {
 
 #[derive(Debug, Serialize, Deserialize, Clone, TS)]
 #[ts(export)]
+#[serde(rename_all = "camelCase")]
 pub enum Input {
-    CreatePlayer {
-        id: String,
-        team: Team,
-    },
+    #[serde(rename_all = "camelCase")]
+    CreatePlayer { id: String, team: Team },
+    #[serde(rename_all = "camelCase")]
     PlayerMove {
         player_id: String,
         velocity: Velocity,
     },
-    RemovePlayer {
-        id: String,
-    },
+    #[serde(rename_all = "camelCase")]
+    RemovePlayer { id: String },
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, TS)]

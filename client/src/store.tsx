@@ -1,4 +1,4 @@
-import { Snapshot } from '@/bindings';
+import { Snapshot, Team } from '@/bindings';
 
 import { create } from 'zustand';
 
@@ -14,6 +14,9 @@ interface GameStore {
 
     clientId: string;
     setClientId: (clientId: string) => void;
+
+    team: Team;
+    setTeam: (team: Team) => void;
 }
 
 // Generate a random string ID for client identification
@@ -30,5 +33,7 @@ export const useGameStore = create<GameStore>()((set) => ({
     snapshot: null,
     setSnapshot: (snapshot) => set({ snapshot }),
     clientId: generateRandomId(),
-    setClientId: (clientId) => set({ clientId })
+    setClientId: (clientId) => set({ clientId }),
+    team: 'red',
+    setTeam: (team) => set({ team })
 }));

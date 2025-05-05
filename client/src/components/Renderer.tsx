@@ -16,7 +16,7 @@ const WORLD_WIDTH = 200;
 const WORLD_HEIGHT = 100;
 
 // Utility helpers -----------------------------------------------------------
-const teamColor = (team: Team) => (team === 'Red' ? 0xff4d4d : 0x4d6dff);
+const teamColor = (team: Team) => (team === 'red' ? 0xff4d4d : 0x4d6dff);
 
 const useViewport = () => {
     const [size, setSize] = useState({

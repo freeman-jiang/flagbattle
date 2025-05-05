@@ -4,7 +4,7 @@ import { Input } from '@/bindings';
 import { useGameStore } from '@/store';
 import { encode } from '@msgpack/msgpack';
 
-const VELOCITY_SCALE = 10;
+const VELOCITY_SCALE = 40;
 
 export const Controller = () => {
     const ws = useGameStore((s) => s.ws);
@@ -19,8 +19,8 @@ export const Controller = () => {
 
         console.log('sendVelocity', dx, dy);
         const msg: Input = {
-            PlayerMove: {
-                player_id: clientId,
+            playerMove: {
+                playerId: clientId,
                 velocity: { dx, dy }
             }
         };
