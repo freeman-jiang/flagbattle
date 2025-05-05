@@ -6,6 +6,12 @@ use std::num::NonZeroU64;
 use ts_rs::TS;
 
 #[derive(TS, Debug, Clone, Copy, Serialize, Deserialize)]
+#[its(export)]
+pub struct Radius {
+    pub value: f32,
+}
+
+#[derive(TS, Debug, Clone, Copy, Serialize, Deserialize)]
 #[ts(export)]
 pub struct Velocity {
     pub dx: f32,
