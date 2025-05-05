@@ -1,13 +1,13 @@
 'use client';
 
-import { GameState } from './GameState';
+import { DebugPanel } from './DebugPanel';
 import { WebsocketManager } from './WebsocketManager';
 
 export const Game = () => {
     return (
         <div>
             <WebsocketManager />
-            <GameState />
+            <DebugPanel />
         </div>
     );
 };
