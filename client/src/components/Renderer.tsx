@@ -50,7 +50,7 @@ const createFlagDraw = (size: number, color: number) =>
 const createArenaDraw = (width: number, height: number) =>
     function draw(g: Graphics) {
         g.clear();
-        g.rect(0, 0, width, height).stroke({ width: 2, color: 0xffffff, alpha: 0.4 });
+        g.rect(0, 0, width, height).stroke({ width: 1, color: 'blue', alpha: 0.4 });
     };
 
 // Main component ------------------------------------------------------------
@@ -69,7 +69,7 @@ export const Renderer = () => {
     const arenaDraw = useCallback(createArenaDraw(WORLD_WIDTH, WORLD_HEIGHT), []);
 
     return (
-        <Application width={width} height={height} background={0x1e1e1e} className='h-screen w-screen'>
+        <Application width={width} height={height} background={'black'} className='h-screen w-screen'>
             {/* Root container that shifts + scales everything to world space */}
             <pixiContainer x={offsetX} y={offsetY} scale={scale}>
                 {/* Arena outline */}
