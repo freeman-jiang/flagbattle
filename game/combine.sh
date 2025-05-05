@@ -1,0 +1,1 @@
+for f in bindings/*.ts ; do echo "export * from './$f';" ; done > index.ts

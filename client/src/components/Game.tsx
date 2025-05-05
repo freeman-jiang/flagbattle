@@ -18,8 +18,16 @@ export const Game = () => {
 
             ws.onmessage = (event) => {
                 console.log('WebSocket message received', event.data);
-                const data = decode(event.data);
-                console.log('Decoded data', data);
+
+                // Check if the data is binary (ArrayBuffer)
+                if (event.data instanceof ArrayBuffer) {
+                    // Convert ArrayBuffer to Uint8Array for proper decoding
+                    const uint8Array = new Uint8Array(event.data);
+                    const data = decode(uint8Array);
+                    console.log('Decoded data', data);
+                } else {
+                    console.error('Received non-binary message:', event.data);
+                }
             };
 
             ws.onclose = () => {

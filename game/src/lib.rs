@@ -42,7 +42,7 @@ impl Game {
                 y: RED_TEAM.flag_position.y,
             },
             Team::Red,
-            Radius { values: 5.0 },
+            Radius { value: 5.0 },
         ));
 
         let blue_flag = world.spawn((
@@ -52,7 +52,7 @@ impl Game {
                 y: BLUE_TEAM.flag_position.y,
             },
             Team::Blue,
-            Radius { values: 5.0 },
+            Radius { value: 5.0 },
         ));
 
         Self {
@@ -63,21 +63,21 @@ impl Game {
         }
     }
 
-    fn collides(&self, a: Entity, b: Entity) -> bool {
-        let Ok((pos_a, rad_a)) = self.world.query_one::<(&Position, &Radius)>(a) else {
-            return false;
-        };
-        let Ok((pos_b, rad_b)) = self.world.query_one::<(&Postion, &Radius)>(b) else {
-            return false;
-        };
+    // fn collides(&self, a: Entity, b: Entity) -> bool {
+    //     let Ok((pos_a, rad_a)) = self.world.query_one::<(&Position, &Radius)>(a) else {
+    //         return false;
+    //     };
+    //     let Ok((pos_b, rad_b)) = self.world.query_one::<(&Position, &Radius)>(b) else {
+    //         return false;
+    //     };
 
-        let dx = pos_a.x - pos_b.x;
-        let dy = pos_a.y - pos_b.y;
+    //     let dx = pos_a.x - pos_b.x;
+    //     let dy = pos_a.y - pos_b.y;
 
-        let dist_sq = dx * dx + dy * dy;
-        let min_dist = rad_a.value + rad_b.value;
-        return dist_sq < min_dist * min_dist;
-    }
+    //     let dist_sq = dx * dx + dy * dy;
+    //     let min_dist = rad_a.value + rad_b.value;
+    //     return dist_sq < min_dist * min_dist;
+    // }
 
     pub fn make_snapshot(&self) -> Snapshot {
         let players = self
@@ -123,7 +123,7 @@ impl Game {
                 x: start_x,
                 y: start_y,
             },
-            Radius { values: 5.0 },
+            Radius { value: 5.0 },
             Velocity { dx: 0.0, dy: 0.0 },
             team,
         ));
