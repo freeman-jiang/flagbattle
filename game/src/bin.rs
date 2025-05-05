@@ -10,13 +10,15 @@ fn main() {
     let mut game = Game::new();
 
     // Add two players
-    let player1 = game.add_player("Player1".to_string(), Team::Red);
-    let player2 = game.add_player("Player2".to_string(), Team::Blue);
+    let player_id1 = "Player1".to_string();
+    let player_id2 = "Player2".to_string();
+    let player1 = game.add_player(player_id1.clone(), Team::Red);
+    let player2 = game.add_player(player_id2.clone(), Team::Blue);
 
     // Set initial velocity for player1 (moving toward blue flag)
     game.apply_input(Input::PlayerMove {
         velocity: Velocity { dx: 1.0, dy: 1.0 },
-        player_id: player1.to_bits(),
+        player_id: player_id1.clone(),
     })
     .unwrap();
 

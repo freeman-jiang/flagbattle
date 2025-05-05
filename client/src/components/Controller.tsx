@@ -6,6 +6,7 @@ import { encode } from '@msgpack/msgpack';
 
 export const Controller = () => {
     const ws = useGameStore((s) => s.ws);
+    const clientId = useGameStore((s) => s.clientId);
 
     // Track currently-pressed movement keys
     const pressed = useRef<Set<string>>(new Set());
@@ -17,8 +18,7 @@ export const Controller = () => {
         console.log('sendVelocity', dx, dy);
         const msg: Input = {
             PlayerMove: {
-                // FIXME: replace with actual player id once login implemented
-                player_id: BigInt(1),
+                player_id: clientId,
                 velocity: { dx, dy }
             }
         };

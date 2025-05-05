@@ -11,7 +11,15 @@ interface GameStore {
     // LOCAL
     snapshot: Snapshot | null;
     setSnapshot: (snapshot: Snapshot) => void;
+
+    clientId: string;
+    setClientId: (clientId: string) => void;
 }
+
+// Generate a random string ID for client identification
+const generateRandomId = () => {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
 
 export const useGameStore = create<GameStore>()((set) => ({
     // NETWORK
@@ -20,5 +28,7 @@ export const useGameStore = create<GameStore>()((set) => ({
 
     // LOCAL
     snapshot: null,
-    setSnapshot: (snapshot) => set({ snapshot })
+    setSnapshot: (snapshot) => set({ snapshot }),
+    clientId: generateRandomId(),
+    setClientId: (clientId) => set({ clientId })
 }));

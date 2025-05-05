@@ -126,7 +126,7 @@ impl Game {
             Team::Blue => BLUE_TEAM.spawn_position.y,
         };
 
-        let player = self.world.spawn((
+        let player_entity = self.world.spawn((
             Metadata { id: id.clone() },
             Position {
                 x: start_x,
@@ -137,8 +137,12 @@ impl Game {
             team,
         ));
 
-        self.player_map.insert(id, player);
-        player
+        self.player_map.insert(id, player_entity);
+        player_entity
+    }
+
+    pub fn get_player(&self, id: String) -> &Entity {
+        self.player_map.get(&id).unwrap()
     }
 
     // Set player's movement intent
@@ -151,8 +155,8 @@ impl Game {
                 velocity,
                 player_id,
             } => {
-                let entity = Entity::from_bits(player_id.get()).unwrap();
-                let mut player_velocity = self.world.get::<&mut Velocity>(entity)?;
+                let entity = self.get_player(player_id);
+                let mut player_velocity = self.world.get::<&mut Velocity>(*entity)?;
                 player_velocity.dx = velocity.dx;
                 player_velocity.dy = velocity.dy;
             }

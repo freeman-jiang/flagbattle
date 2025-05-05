@@ -2,4 +2,4 @@
 import type { Team } from "./Team";
 import type { Velocity } from "./Velocity";
 
-export type Input = { "CreatePlayer": { id: string, team: Team, } } | { "PlayerMove": { player_id: bigint, velocity: Velocity, } };
+export type Input = { "CreatePlayer": { id: string, team: Team, } } | { "PlayerMove": { player_id: string, velocity: Velocity, } };

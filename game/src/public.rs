@@ -41,13 +41,11 @@ pub struct Metadata {
     pub id: String,
 }
 
-pub type EntityBits = NonZeroU64;
-
 // Flag component
 #[derive(TS, Debug, Clone, Serialize, Deserialize)]
 #[ts(export)]
 pub struct Item {
-    pub held_by: Option<EntityBits>,
+    pub held_by: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, TS)]
@@ -58,7 +56,7 @@ pub enum Input {
         team: Team,
     },
     PlayerMove {
-        player_id: EntityBits,
+        player_id: String,
         velocity: Velocity,
     },
 }
@@ -86,18 +84,4 @@ pub struct Flag {
 pub struct Snapshot {
     pub players: Vec<Player>,
     pub flags: Vec<Flag>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, TS)]
-#[ts(export)]
-pub struct PlayerAssigned {
-    pub player_id: EntityBits,
-    pub team: Team,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, TS)]
-#[ts(export)]
-pub enum GameMessage {
-    Snapshot(Snapshot),
-    PlayerAssigned(PlayerAssigned),
 }
