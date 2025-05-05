@@ -1,29 +1,29 @@
 use hecs::{ComponentError, Entity, World};
-use rkyv::{Archive, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, num::NonZeroU64};
 
-#[derive(Debug, Clone, Copy, Archive, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Velocity {
     pub dx: f32,
     pub dy: f32,
 }
 
 // Position component
-#[derive(Debug, Clone, Copy, Archive, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Position {
     pub x: f32,
     pub y: f32,
 }
 
 // Team component
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Archive, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Team {
     Red,
     Blue,
 }
 
 // Player component
-#[derive(Debug, Clone, Archive, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Metadata {
     pub name: String,
 }
@@ -31,7 +31,7 @@ pub struct Metadata {
 type EntityBits = NonZeroU64;
 
 // Flag component
-#[derive(Debug, Clone, Archive, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Item {
     pub held_by: Option<EntityBits>,
 }
@@ -62,7 +62,7 @@ const BLUE_TEAM: TeamConfig = TeamConfig {
     spawn_position: Position { x: 195.0, y: 95.0 },
 };
 
-#[derive(Debug, Archive, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum Input {
     PlayerMove {
         player_id: EntityBits,
@@ -70,7 +70,7 @@ pub enum Input {
     },
 }
 
-#[derive(Debug, Archive, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Player {
     pub metadata: Metadata,
     pub position: Position,
@@ -78,7 +78,7 @@ pub struct Player {
     pub team: Team,
 }
 
-#[derive(Debug, Archive, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Flag {
     pub position: Position,
     pub team: Team,
@@ -86,7 +86,7 @@ pub struct Flag {
 }
 
 // All the data that needs to be sent to the client to render the game
-#[derive(Debug, Archive, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Snapshot {
     pub players: Vec<Player>,
     pub flags: Vec<Flag>,

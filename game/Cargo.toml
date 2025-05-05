@@ -13,5 +13,6 @@ path = "src/bin.rs"
 
 [dependencies]
 hecs = {version = "0.10.5", features = ["serde"]}
-rkyv = {version = "=0.8.10", features = ["bytecheck", "alloc"]} # MUST BE THE SAME AS SERVER Cargo.toml
+rmp-serde = "1.3.0"
+serde = { version = "1.0.219", features = ["derive"] }
 
