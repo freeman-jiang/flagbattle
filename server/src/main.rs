@@ -15,7 +15,7 @@ use game::{Game, Input, Snapshot, Team};
 use serde::Deserialize;
 use tokio::sync::{broadcast, mpsc};
 
-const TICK_RATE: f32 = 1.0;
+const TICK_RATE: f32 = 0.0166666667;
 
 #[derive(Debug)]
 pub struct ServerState {

@@ -4,6 +4,8 @@ import { Input } from '@/bindings';
 import { useGameStore } from '@/store';
 import { encode } from '@msgpack/msgpack';
 
+const VELOCITY_SCALE = 10;
+
 export const Controller = () => {
     const ws = useGameStore((s) => s.ws);
     const clientId = useGameStore((s) => s.clientId);
@@ -31,12 +33,12 @@ export const Controller = () => {
         const relevant = new Set(['w', 'a', 's', 'd']);
 
         const recomputeAndSend = () => {
-            let dx = 0,
-                dy = 0;
-            if (pressed.current.has('w')) dy -= 1;
-            if (pressed.current.has('s')) dy += 1;
-            if (pressed.current.has('a')) dx -= 1;
-            if (pressed.current.has('d')) dx += 1;
+            let dx = 0;
+            let dy = 0;
+            if (pressed.current.has('w')) dy -= VELOCITY_SCALE;
+            if (pressed.current.has('s')) dy += VELOCITY_SCALE;
+            if (pressed.current.has('a')) dx -= VELOCITY_SCALE;
+            if (pressed.current.has('d')) dx += VELOCITY_SCALE;
 
             sendVelocity(dx, dy);
         };
