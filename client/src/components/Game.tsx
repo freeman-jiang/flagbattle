@@ -1,5 +1,6 @@
 'use client';
 
+import { Controller } from './Controller';
 import { DebugPanel } from './DebugPanel';
 import { Renderer } from './Renderer';
 import { WebsocketManager } from './WebsocketManager';
@@ -9,6 +10,7 @@ export const Game = () => {
         <div>
             <WebsocketManager />
             <Renderer />
+            <Controller />
             <DebugPanel />
         </div>
     );

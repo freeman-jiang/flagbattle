@@ -6,6 +6,11 @@ import { decode } from '@msgpack/msgpack';
 
 import { toast } from 'sonner';
 
+// Generate a random string ID for client identification
+const generateRandomId = () => {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
+
 export const WebsocketManager = () => {
     const ws = useGameStore((state) => state.ws);
     const setWS = useGameStore((state) => state.setWS);
@@ -13,7 +18,8 @@ export const WebsocketManager = () => {
 
     useEffect(() => {
         if (!ws) {
-            const ws = new WebSocket('ws://localhost:8080/ws');
+            const clientId = generateRandomId();
+            const ws = new WebSocket(`ws://localhost:8080/ws?id=${clientId}`);
             ws.binaryType = 'arraybuffer';
 
             ws.onopen = () => {

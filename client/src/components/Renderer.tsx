@@ -83,7 +83,7 @@ export const Renderer = () => {
                     const color = teamColor(flag.team);
                     const drawCb = createFlagDraw(size, color);
 
-                    return <pixiGraphics key={`flag-${idx}`} x={posX} y={posY} draw={drawCb} />;
+                    return <pixiGraphics key={`flag-${flag.team}`} x={posX} y={posY} draw={drawCb} />;
                 })}
 
                 {/* Players */}
@@ -93,7 +93,7 @@ export const Renderer = () => {
                     const radius = 2.5; // world units (half of rust Radius for nicer visuals)
                     const drawCb = createPlayerDraw(radius, color);
 
-                    return <pixiGraphics key={metadata.name} x={position.x} y={position.y} draw={drawCb} />;
+                    return <pixiGraphics key={metadata.id} x={position.x} y={position.y} draw={drawCb} />;
                 })}
             </pixiContainer>
         </Application>

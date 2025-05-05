@@ -115,7 +115,7 @@ impl Game {
         Snapshot { players, flags }
     }
 
-    pub fn add_player(&mut self, name: String, team: Team) -> Entity {
+    pub fn add_player(&mut self, id: String, team: Team) -> Entity {
         let start_x = match team {
             Team::Red => RED_TEAM.spawn_position.x,
             Team::Blue => BLUE_TEAM.spawn_position.x,
@@ -127,7 +127,7 @@ impl Game {
         };
 
         let player = self.world.spawn((
-            Metadata { name: name.clone() },
+            Metadata { id: id.clone() },
             Position {
                 x: start_x,
                 y: start_y,
@@ -137,13 +137,16 @@ impl Game {
             team,
         ));
 
-        self.player_map.insert(name, player);
+        self.player_map.insert(id, player);
         player
     }
 
     // Set player's movement intent
     pub fn apply_input(&mut self, input: Input) -> Result<(), ComponentError> {
         match input {
+            Input::CreatePlayer { team, id } => {
+                self.add_player(id, team);
+            }
             Input::PlayerMove {
                 velocity,
                 player_id,
