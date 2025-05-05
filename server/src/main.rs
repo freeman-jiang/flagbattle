@@ -42,7 +42,7 @@ async fn receive_game_snapshots(
 ) {
     while let Ok(snapshot) = snapshot_rx.recv().await {
         println!("Received snapshot");
-        let serialized_bytes = rmp_serde::to_vec(&snapshot).unwrap();
+        let serialized_bytes = rmp_serde::to_vec_named(&snapshot).unwrap();
         let axum_bytes: axum::body::Bytes = serialized_bytes.into();
 
         ws_sender.send(Message::Binary(axum_bytes)).await.unwrap();

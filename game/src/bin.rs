@@ -37,7 +37,7 @@ fn main() {
         let snapshot = game.make_snapshot();
 
         // Serialize snapshot using messagepack
-        let buf = rmp_serde::to_vec(&snapshot).unwrap();
+        let buf = rmp_serde::to_vec_named(&snapshot).unwrap();
         println!("Serialized snapshot size: {} bytes", buf.len());
 
         let owned = rmp_serde::from_slice::<Snapshot>(&buf).unwrap();
