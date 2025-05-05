@@ -2,40 +2,8 @@ use hecs::{ComponentError, Entity, World};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, num::NonZeroU64};
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Velocity {
-    pub dx: f32,
-    pub dy: f32,
-}
-
-// Position component
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Position {
-    pub x: f32,
-    pub y: f32,
-}
-
-// Team component
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum Team {
-    Red,
-    Blue,
-}
-
-// Player component
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Metadata {
-    pub name: String,
-}
-
-type EntityBits = NonZeroU64;
-
-// Flag component
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Item {
-    pub held_by: Option<EntityBits>,
-}
-
+pub mod public;
+pub use public::*;
 // Game struct that uses hecs ECS
 pub struct Game {
     pub world: World,
@@ -47,7 +15,7 @@ pub struct Game {
 const GRID_X: f32 = 200.0;
 const GRID_Y: f32 = 100.0;
 
-pub struct TeamConfig {
+struct TeamConfig {
     pub flag_position: Position,
     pub spawn_position: Position,
 }
@@ -61,36 +29,6 @@ const BLUE_TEAM: TeamConfig = TeamConfig {
     flag_position: Position { x: 190.0, y: 50.0 },
     spawn_position: Position { x: 195.0, y: 95.0 },
 };
-
-#[derive(Debug, Serialize, Deserialize)]
-pub enum Input {
-    PlayerMove {
-        player_id: EntityBits,
-        velocity: Velocity,
-    },
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Player {
-    pub metadata: Metadata,
-    pub position: Position,
-    pub velocity: Velocity,
-    pub team: Team,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Flag {
-    pub position: Position,
-    pub team: Team,
-    pub item: Item,
-}
-
-// All the data that needs to be sent to the client to render the game
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Snapshot {
-    pub players: Vec<Player>,
-    pub flags: Vec<Flag>,
-}
 
 impl Game {
     pub fn new() -> Self {

@@ -41,7 +41,7 @@ fn main() {
         println!("Serialized snapshot size: {} bytes", buf.len());
 
         let owned = rmp_serde::from_slice::<Snapshot>(&buf).unwrap();
-        dbg!(&owned);
+        dbg!(&owned.players[0].position);
 
         frame_count += 1;
 
