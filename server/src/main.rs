@@ -10,8 +10,7 @@ use axum::{
 };
 use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
-use game::{ArchivedSnapshot, Game, Input, Snapshot};
-use rkyv::rancor::Error;
+use game::{Game, Input, Snapshot};
 use tokio::sync::{broadcast, mpsc};
 
 const TICK_RATE: f32 = 1.0;
@@ -43,8 +42,8 @@ async fn receive_game_snapshots(
 ) {
     while let Ok(snapshot) = snapshot_rx.recv().await {
         println!("Received snapshot");
-        let serialized_bytes = rkyv::to_bytes::<Error>(&snapshot).unwrap();
-        let axum_bytes: axum::body::Bytes = serialized_bytes.into_vec().into();
+        let serialized_bytes = rmp_serde::to_vec(&snapshot).unwrap();
+        let axum_bytes: axum::body::Bytes = serialized_bytes.into();
 
         ws_sender.send(Message::Binary(axum_bytes)).await.unwrap();
     }
@@ -59,15 +58,15 @@ async fn forward_player_inputs(
             println!("Received bytes: {}", bytes.len());
 
             // Deserialize the bytes into an Input
-            let archived = match rkyv::access::<ArchivedSnapshot, Error>(&bytes) {
-                Ok(archived) => archived,
+            let input = match rmp_serde::from_slice::<Input>(&bytes) {
+                Ok(input) => input,
                 Err(e) => {
-                    println!("Failed to access archived snapshot: {}", e);
+                    println!("Failed to deserialize input: {}", e);
                     continue;
                 }
             };
 
-            let snapshot = match rkyv::deserialize::<Snapshot, Error>(archived) {
+            let snapshot = match rmp_serde::from_slice::<Snapshot>(&bytes) {
                 Ok(snapshot) => snapshot,
                 Err(e) => {
                     println!("Failed to deserialize snapshot: {}", e);

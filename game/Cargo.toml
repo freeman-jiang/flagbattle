@@ -13,6 +13,8 @@ path = "src/bin.rs"
 
 [dependencies]
 hecs = {version = "0.10.5", features = ["serde"]}
+
+# SHOULD BE SAME
 rmp-serde = "1.3.0"
 serde = { version = "1.0.219", features = ["derive"] }
 
