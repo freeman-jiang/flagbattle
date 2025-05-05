@@ -71,7 +71,7 @@ async fn forward_player_inputs(
     input_tx
         .send(Input::CreatePlayer {
             team: Team::Red,
-            id: client_id,
+            id: client_id.clone(),
         })
         .unwrap();
 
@@ -101,6 +101,9 @@ async fn forward_player_inputs(
                 Input::CreatePlayer { team, id } => {
                     panic!("Wait this shouldn't happen")
                 }
+                Input::RemovePlayer { id } => {
+                    input_tx.send(Input::RemovePlayer { id }).unwrap();
+                }
             }
         } else {
             println!("Received non-binary message: {:?}", input);
@@ -108,6 +111,11 @@ async fn forward_player_inputs(
     }
 
     println!("Client disconnected");
+
+    // Inform game to remove player
+    input_tx
+        .send(Input::RemovePlayer { id: client_id })
+        .unwrap();
 }
 
 async fn run_game_loop(
@@ -116,6 +124,8 @@ async fn run_game_loop(
 ) {
     let mut game = Game::new(); // <-- exclusive owner
     let mut tick = tokio::time::interval(Duration::from_secs_f32(TICK_RATE));
+    let mut snapshot_count = 0;
+    let start_time = std::time::Instant::now();
 
     loop {
         tick.tick().await;
@@ -127,7 +137,9 @@ async fn run_game_loop(
 
         game.step(TICK_RATE);
 
-        println!("Sending snapshot");
+        snapshot_count += 1;
+        let elapsed = start_time.elapsed().as_secs_f32();
+        println!("Sending snapshot #{} ({:.2}s)", snapshot_count, elapsed);
         let _ = snapshot_tx.send(game.make_snapshot()); // lagging clients drop
     }
 }

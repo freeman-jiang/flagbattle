@@ -1,6 +1,5 @@
-use hecs::{ComponentError, Entity, World};
-use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, num::NonZeroU64};
+use hecs::{ComponentError, Entity, NoSuchEntity, World};
+use std::collections::HashMap;
 
 pub mod public;
 pub use public::*;
@@ -141,6 +140,11 @@ impl Game {
         player_entity
     }
 
+    pub fn remove_player(&mut self, id: String) -> Result<(), NoSuchEntity> {
+        let entity = self.player_map.remove(&id).unwrap();
+        return self.world.despawn(entity);
+    }
+
     pub fn get_player(&self, id: String) -> &Entity {
         self.player_map.get(&id).unwrap()
     }
@@ -150,6 +154,9 @@ impl Game {
         match input {
             Input::CreatePlayer { team, id } => {
                 self.add_player(id, team);
+            }
+            Input::RemovePlayer { id } => {
+                self.remove_player(id).ok();
             }
             Input::PlayerMove {
                 velocity,
