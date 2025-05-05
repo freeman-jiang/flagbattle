@@ -42,7 +42,7 @@ impl Game {
                 y: RED_TEAM.flag_position.y,
             },
             Team::Red,
-            Radius { values: 5.0 },
+            Radius { value: 5.0 },
         ));
 
         let blue_flag = world.spawn((
@@ -52,7 +52,7 @@ impl Game {
                 y: BLUE_TEAM.flag_position.y,
             },
             Team::Blue,
-            Radius { values: 5.0 },
+            Radius { value: 5.0 },
         ));
 
         Self {
@@ -64,10 +64,19 @@ impl Game {
     }
 
     fn collides(&self, a: Entity, b: Entity) -> bool {
-        let Ok((pos_a, rad_a)) = self.world.query_one::<(&Position, &Radius)>(a) else {
+        let Ok(mut query_a) = self.world.query_one::<(&Position, &Radius)>(a) else {
             return false;
         };
-        let Ok((pos_b, rad_b)) = self.world.query_one::<(&Postion, &Radius)>(b) else {
+
+        let Some((pos_a, rad_a)) = query_a.get() else {
+            return false;
+        };
+
+        let Ok(mut query_b) = self.world.query_one::<(&Position, &Radius)>(b) else {
+            return false;
+        };
+
+        let Some((pos_b, rad_b)) = query_b.get() else {
             return false;
         };
 
