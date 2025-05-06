@@ -176,9 +176,13 @@ async fn main() {
         .route("/ws", get(ws_handler))
         .with_state(shared_server_state);
 
-    // run our app with hyper, listening globally on port 8080
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
-    println!("Listening on http://localhost:8080 (ws on /ws)");
+    // Get port from environment variable or use 8080 as default
+    let port = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
+    let addr = format!("0.0.0.0:{}", port);
+
+    // run our app with hyper, listening globally on the specified port
+    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
+    println!("Listening on http://localhost:{} (ws on /ws)", port);
     axum::serve(listener, app).await.unwrap();
 }
 

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+
 import { Input } from '@/bindings';
 import { useGameStore } from '@/store';
 import { encode } from '@msgpack/msgpack';
@@ -44,6 +45,7 @@ export const Controller = () => {
         if (pressed.current.has('s')) dy += VELOCITY_SCALE;
         if (pressed.current.has('a')) dx -= VELOCITY_SCALE;
         if (pressed.current.has('d')) dx += VELOCITY_SCALE;
+
         return { dx, dy };
     };
 
@@ -81,6 +83,7 @@ export const Controller = () => {
                     pressed.current.add(key);
                     recomputeAndSend();
                 }
+
                 return;
             }
             // Handle spacebar for melee attack
