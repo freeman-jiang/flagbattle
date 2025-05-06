@@ -58,7 +58,10 @@ async fn receive_game_snapshots(
         let serialized_bytes = rmp_serde::to_vec_named(&snapshot).unwrap();
         let axum_bytes: axum::body::Bytes = serialized_bytes.into();
 
-        ws_sender.send(Message::Binary(axum_bytes)).await.unwrap();
+        if let Err(e) = ws_sender.send(Message::Binary(axum_bytes)).await {
+            println!("Failed to send snapshot: {}", e);
+            break; // Exit the loop if connection is closed
+        }
     }
 }
 
