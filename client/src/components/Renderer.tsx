@@ -4,11 +4,12 @@ import { Flag, Player, Snapshot, Team } from '@/bindings';
 import { useGameStore } from '@/store';
 import { Application, extend } from '@pixi/react';
 
-import { Container, Graphics } from 'pixi.js';
+import { Container, Graphics, Text, TextStyle } from 'pixi.js';
 
 extend({
     Container,
-    Graphics
+    Graphics,
+    Text
 });
 
 // World dimensions (must stay in sync with Rust constants in game/src/lib.rs)
@@ -68,8 +69,41 @@ export const Renderer = () => {
     // Pre-compute draw callbacks that depend on scale so they get memoised between renders.
     const arenaDraw = useCallback(createArenaDraw(WORLD_WIDTH, WORLD_HEIGHT), []);
 
+    // Get scores from snapshot with type assertion to handle missing type definition
+    type SnapshotWithScore = Snapshot & { score?: Record<string, number> };
+    const snapshotWithScore = snapshot as SnapshotWithScore;
+    const redScore = snapshotWithScore?.score?.['red'] || 0;
+    const blueScore = snapshotWithScore?.score?.['blue'] || 0;
+
+    // Text style for score display
+    const scoreStyle = new TextStyle({
+        fontFamily: 'Arial',
+        fontSize: 32,
+        fontWeight: 'bold',
+        fill: 'white',
+        align: 'center'
+    });
+
     return (
-        <Application width={width} height={height} background={'black'} className='h-screen w-screen'>
+        <Application
+            width={width}
+            height={height}
+            background={'black'}
+            className='h-screen w-screen'
+            resolution={window.devicePixelRatio || 1}
+            autoDensity={true}
+            antialias={true}>
+            {/* Score display */}
+            <pixiText text={`RED: ${redScore}`} x={20} y={20} style={scoreStyle} tint={0xff4d4d} resolution={2} />
+            <pixiText
+                text={`BLUE: ${blueScore}`}
+                x={width - 120}
+                y={20}
+                style={scoreStyle}
+                tint={0x4d6dff}
+                resolution={2}
+            />
+
             {/* Root container that shifts + scales everything to world space */}
             <pixiContainer x={offsetX} y={offsetY} scale={scale}>
                 {/* Arena outline */}
