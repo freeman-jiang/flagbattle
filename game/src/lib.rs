@@ -9,6 +9,7 @@ pub struct Game {
     pub red_flag: Entity,
     pub blue_flag: Entity,
     pub player_map: HashMap<String, Entity>,
+    pub score: HashMap<Team, u32>,
 }
 
 const GRID_X: f32 = 200.0;
@@ -59,6 +60,7 @@ impl Game {
             red_flag,
             blue_flag,
             player_map: HashMap::new(),
+            score: HashMap::from([(Team::Red, 0), (Team::Blue, 0)]),
         }
     }
 
@@ -257,6 +259,62 @@ impl Game {
         // Check for flag pickups
         // This would be implemented here
 
+        let player_entities = self.player_map.values().collect::<Vec<_>>();
+
+        for player_entity in player_entities {
+            // Get player team
+            let player_team = match self.world.get::<&Team>(*player_entity) {
+                Ok(team) => team,
+                Err(_) => continue, // Skip if no team
+            };
+
+            // Check for red flag capture (only by blue team)
+            if *player_team == Team::Blue && self.entities_collide(*player_entity, self.red_flag) {
+                // Update flag position to follow the player
+                if let (Ok(player_pos), Ok(mut flag_pos)) = (
+                    self.world.get::<&Position>(*player_entity),
+                    self.world.get::<&mut Position>(self.red_flag),
+                ) {
+                    flag_pos.x = player_pos.x;
+                    flag_pos.y = player_pos.y;
+                }
+
+                // Did blue team bring the flag to the base?
+                // TODO: Make it blue flag spawn instead of blue flag position
+                if self.entities_collide(*player_entity, self.blue_flag) {
+                    self.score.entry(Team::Blue).and_modify(|count| *count += 1);
+
+                    // Reset red flag position
+                    let mut red_flag = self.world.get::<&mut Position>(self.red_flag).unwrap();
+                    red_flag.x = RED_TEAM.flag_position.x;
+                    red_flag.y = RED_TEAM.flag_position.y;
+                }
+            }
+
+            // Check for blue flag capture (only by red team)
+            if *player_team == Team::Red && self.entities_collide(*player_entity, self.blue_flag) {
+                // Update flag position to follow the player
+                if let (Ok(player_pos), Ok(mut flag_pos)) = (
+                    self.world.get::<&Position>(*player_entity),
+                    self.world.get::<&mut Position>(self.blue_flag),
+                ) {
+                    flag_pos.x = player_pos.x;
+                    flag_pos.y = player_pos.y;
+                }
+
+                // Did blue team bring the flag to the base?
+                // TODO: Make it blue flag spawn instead of blue flag position
+                if self.entities_collide(*player_entity, self.red_flag) {
+                    self.score.entry(Team::Red).and_modify(|count| *count += 1);
+
+                    // Reset blue flag position
+                    let mut blue_flag = self.world.get::<&mut Position>(self.blue_flag).unwrap();
+                    blue_flag.x = BLUE_TEAM.flag_position.x;
+                    blue_flag.y = BLUE_TEAM.flag_position.y;
+                }
+            }
+        }
+
         // Check for flag captures
         // This would be implemented here
 
@@ -289,7 +347,11 @@ impl Game {
             })
             .collect();
 
-        Snapshot { players, flags }
+        Snapshot {
+            players,
+            flags,
+            score: self.score.clone(),
+        }
     }
 
     pub fn add_player(&mut self, id: String, team: Team) -> Entity {

@@ -38,34 +38,11 @@ export const DebugPanel = () => {
                         </div>
                     ) : (
                         <div className='space-y-6'>
-                            <div>
-                                <h3 className='mb-3 text-lg font-medium'>Players ({snapshot.players.length})</h3>
-                                <div className='space-y-2'>
-                                    {snapshot.players.length === 0 ? (
-                                        <div className='text-slate-400'>No players</div>
-                                    ) : (
-                                        snapshot.players.map((player, index) => (
-                                            <div key={index} className='rounded bg-slate-800 p-3'>
-                                                <pre className='font-mono text-sm break-words whitespace-pre-wrap text-slate-300'>
-                                                    {JSON.stringify(player, null, 2)}
-                                                </pre>
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
-                            </div>
-
-                            <div>
-                                <h3 className='mb-3 text-lg font-medium'>Flags ({snapshot.flags.length})</h3>
-                                <div className='space-y-2'>
-                                    {snapshot.flags.map((flag, index) => (
-                                        <div key={index} className='rounded bg-slate-800 p-3'>
-                                            <pre className='font-mono text-sm break-words whitespace-pre-wrap text-slate-300'>
-                                                {JSON.stringify(flag, null, 2)}
-                                            </pre>
-                                        </div>
-                                    ))}
-                                </div>
+                            <div className='rounded bg-slate-800 p-3'>
+                                <h3 className='mb-3 text-lg font-medium'>Full Snapshot</h3>
+                                <pre className='font-mono text-sm break-words whitespace-pre-wrap text-slate-300'>
+                                    {JSON.stringify(snapshot, null, 2)}
+                                </pre>
                             </div>
                         </div>
                     )}
