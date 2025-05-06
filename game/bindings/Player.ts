@@ -4,4 +4,4 @@ import type { Position } from "./Position";
 import type { Team } from "./Team";
 import type { Velocity } from "./Velocity";
 
-export type Player = { metadata: Metadata, position: Position, velocity: Velocity, team: Team, };
+export type Player = { metadata: Metadata, position: Position, velocity: Velocity, team: Team, melee_active: boolean, };

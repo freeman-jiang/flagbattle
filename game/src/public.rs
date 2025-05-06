@@ -25,6 +25,19 @@ pub struct Position {
     pub y: f32,
 }
 
+// Melee
+#[derive(TS, Debug, Clone, Copy, Serialize, Deserialize)]
+#[ts(export)]
+pub struct Melee {
+    pub active: bool,
+    pub cooldown: f32,
+    pub max_cooldown: f32,
+}
+
+pub const MELEE_COOLDOWN: f32 = 0.5; // Half a second cooldown
+pub const MELEE_DURATION: f32 = 0.2; // Duration of the attack
+pub const MELEE_SPEED_MULTIPLIER: f32 = 9.0; // How much faster the player moves during attack
+
 // Team component
 #[derive(TS, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[ts(export)]
@@ -53,14 +66,22 @@ pub struct Item {
 #[serde(rename_all = "camelCase")]
 pub enum Input {
     #[serde(rename_all = "camelCase")]
-    CreatePlayer { id: String, team: Team },
+    CreatePlayer {
+        id: String,
+        team: Team,
+    },
     #[serde(rename_all = "camelCase")]
     PlayerMove {
         player_id: String,
         velocity: Velocity,
     },
     #[serde(rename_all = "camelCase")]
-    RemovePlayer { id: String },
+    RemovePlayer {
+        id: String,
+    },
+    PlayerMelee {
+        player_id: String,
+    },
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, TS)]
@@ -70,6 +91,7 @@ pub struct Player {
     pub position: Position,
     pub velocity: Velocity,
     pub team: Team,
+    pub melee_active: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, TS)]

@@ -27,10 +27,22 @@ export const Controller = () => {
         ws.send(encode(msg, { useBigInt64: true }));
     };
 
+    // Helper to transmit melee attack to server
+    const sendMeleeAttack = () => {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        console.log('sendMeleeAttack');
+        const msg: Input = {
+            playerMelee: {
+                player_id: clientId
+            }
+        };
+        ws.send(encode(msg, { useBigInt64: true }));
+    };
+
     // ---------------------------------------------------------------------
     // Keyboard listeners (WASD)
     useEffect(() => {
-        const relevant = new Set(['w', 'a', 's', 'd']);
+        const movementKeys = new Set(['w', 'a', 's', 'd'])
 
         const recomputeAndSend = () => {
             let dx = 0;
@@ -42,21 +54,31 @@ export const Controller = () => {
 
             sendVelocity(dx, dy);
         };
-
         const handleDown = (e: KeyboardEvent) => {
             const key = e.key.toLowerCase();
-            if (!relevant.has(key)) return;
-            if (!pressed.current.has(key)) {
-                pressed.current.add(key);
-                recomputeAndSend();
+
+            // Handle movement keys
+            if (movementKeys.has(key)) {
+                if (!pressed.current.has(key)) {
+                    pressed.current.add(key);
+                    recomputeAndSend();
+                }
+                return;
+            }
+
+            // Handle spacebar for melee attack
+            if (key === ' ' && !e.repeat) {
+                // Only send melee command once per keypress
+                sendMeleeAttack();
             }
         };
 
         const handleUp = (e: KeyboardEvent) => {
             const key = e.key.toLowerCase();
-            if (!relevant.has(key)) return;
-            if (pressed.current.delete(key)) {
-                recomputeAndSend();
+            if (movementKeys.has(key)) {
+                if (pressed.current.delete(key)) {
+                    recomputeAndSend();
+                }
             }
         };
 

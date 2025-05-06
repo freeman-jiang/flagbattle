@@ -90,13 +90,14 @@ impl Game {
     pub fn make_snapshot(&self) -> Snapshot {
         let players = self
             .world
-            .query::<(&Metadata, &Position, &Team, &Velocity)>()
+            .query::<(&Metadata, &Position, &Team, &Velocity, &Melee)>()
             .into_iter()
-            .map(|(_, (metadata, position, team, velocity))| Player {
+            .map(|(_, (metadata, position, team, velocity, melee))| Player {
                 metadata: metadata.clone(),
                 position: position.clone(),
                 velocity: velocity.clone(),
                 team: team.clone(),
+                melee_active: melee.active,
             })
             .collect();
 
@@ -134,6 +135,11 @@ impl Game {
             Radius { value: 5.0 },
             Velocity { dx: 0.0, dy: 0.0 },
             team,
+            Melee {
+                active: false,
+                cooldown: 0.0,
+                max_cooldown: MELEE_COOLDOWN,
+            },
         ));
 
         self.player_map.insert(id, player_entity);
@@ -166,6 +172,34 @@ impl Game {
                 player_velocity.dx = velocity.dx;
                 player_velocity.dy = velocity.dy;
             }
+            Input::PlayerMelee { player_id } => {
+                let player = self.get_player(player_id);
+
+                // Get the velocity values first without keeping the borrow
+                let (dx, dy) = {
+                    let velocity = self.world.get::<&Velocity>(*player)?;
+                    (velocity.dx, velocity.dy)
+                }; // Borrow is dropped here
+
+                // Check if the player is moving
+                if dx != 0.0 || dy != 0.0 {
+                    let mut melee = self.world.get::<&mut Melee>(*player)?;
+
+                    if melee.cooldown <= 0.0 && !melee.active {
+                        melee.active = true;
+                        melee.cooldown = melee.max_cooldown;
+
+                        // Now we can borrow velocity mutably since the immutable borrow is gone
+                        let mut player_velocity = self.world.get::<&mut Velocity>(*player)?;
+
+                        let length = (dx * dx + dy * dy).sqrt();
+                        if length > 0.0 {
+                            player_velocity.dx = (dx / length) * MELEE_SPEED_MULTIPLIER;
+                            player_velocity.dy = (dy / length) * MELEE_SPEED_MULTIPLIER;
+                        }
+                    }
+                }
+            }
         }
 
         Ok(())
@@ -174,6 +208,26 @@ impl Game {
     // Update the game state based on the delta time (frame-independently)
     // Delta time is the time elapsed between the current frame and the previous frame in a game loop
     pub fn step(&mut self, dt: f32) {
+        let mut players_needing_velocity_reset = Vec::new();
+        // Update Melee cooldowns
+        for (entity, melee) in self.world.query_mut::<&mut Melee>() {
+            if melee.cooldown > 0.0 {
+                melee.cooldown -= dt;
+
+                // When melee attack duration ends
+                if melee.active && melee.cooldown < melee.max_cooldown - MELEE_DURATION {
+                    melee.active = false;
+                    // Mark this player for velocity reset
+                    players_needing_velocity_reset.push(entity);
+                }
+            }
+        }
+        for entity in players_needing_velocity_reset {
+            if let Ok(mut velocity) = self.world.get::<&mut Velocity>(entity) {
+                velocity.dx = 0.0;
+                velocity.dy = 0.0;
+            }
+        }
         // Apply velocities to positions
         for (_entity, (position, velocity)) in self.world.query_mut::<(&mut Position, &Velocity)>()
         {
@@ -185,10 +239,141 @@ impl Game {
             position.y = position.y.max(0.0).min(GRID_Y);
         }
 
+        let melee_players: Vec<(Entity, Team)> = self
+            .world
+            .query::<(&Team, &Melee)>()
+            .into_iter()
+            .filter(|(_, (_, melee))| melee.active)
+            .map(|(entity, (team, _))| (entity, team.clone()))
+            .collect();
+        let all_players: Vec<(Entity, Team)> = self
+            .world
+            .query::<&Team>()
+            .into_iter()
+            .map(|(entity, team)| (entity, team.clone()))
+            .collect();
+
+        // Check for melee collisions and collect players to respawn
+        let mut players_to_respawn = Vec::new();
+
+        for (attacker, attacker_team) in melee_players.iter() {
+            for (victim, victim_team) in all_players.iter() {
+                // Don't check collision with self or same team
+                if *attacker == *victim || attacker_team == victim_team {
+                    continue;
+                }
+
+                // Check collision
+                if self.collides(*attacker, *victim) {
+                    players_to_respawn.push(*victim);
+                }
+            }
+        }
+
+        // Process players that need to respawn
+        for player_entity in players_to_respawn {
+            // Drop flag if held
+            self.drop_flag_if_held_by(player_entity);
+
+            // Respawn player
+            self.respawn_player(player_entity);
+        }
         // Check for flag captures
         // This would iterate through all players and check if they can capture flags
 
         // Check for flag returns
         // This would check if players with flags have reached their base
+    }
+
+    fn drop_flag_if_held_by(&mut self, player_entity: Entity) {
+        let player_id = match self.world.get::<&Metadata>(player_entity) {
+            Ok(metadata) => metadata.id.clone(),
+            Err(_) => return,
+        };
+        // Check red flag
+        let red_flag_held_by_player = {
+            if let Ok(item) = self.world.get::<&Item>(self.red_flag) {
+                if let Some(holder) = &item.held_by {
+                    holder == &player_id
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        };
+
+        if red_flag_held_by_player {
+            if let Ok(mut item) = self.world.get::<&mut Item>(self.red_flag) {
+                item.held_by = None;
+
+                // Get player position to drop the flag there
+                if let Ok(player_pos) = self.world.get::<&Position>(player_entity) {
+                    if let Ok(mut flag_pos) = self.world.get::<&mut Position>(self.red_flag) {
+                        flag_pos.x = player_pos.x;
+                        flag_pos.y = player_pos.y;
+                    }
+                }
+            }
+        }
+
+        // Check blue flag
+        let blue_flag_held_by_player = {
+            if let Ok(item) = self.world.get::<&Item>(self.blue_flag) {
+                if let Some(holder) = &item.held_by {
+                    holder == &player_id
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        };
+
+        if blue_flag_held_by_player {
+            if let Ok(mut item) = self.world.get::<&mut Item>(self.blue_flag) {
+                item.held_by = None;
+
+                // Get player position to drop the flag there
+                if let Ok(player_pos) = self.world.get::<&Position>(player_entity) {
+                    if let Ok(mut flag_pos) = self.world.get::<&mut Position>(self.blue_flag) {
+                        flag_pos.x = player_pos.x;
+                        flag_pos.y = player_pos.y;
+                    }
+                }
+            }
+        }
+    }
+
+    fn respawn_player(&mut self, player_entity: Entity) {
+        // Get player team
+        let team = match self.world.get::<&Team>(player_entity) {
+            Ok(team) => team.clone(),
+            Err(_) => return, // Can't respawn if no team
+        };
+
+        // Get spawn position
+        let spawn_pos = match *team {
+            Team::Red => RED_TEAM.spawn_position,
+            Team::Blue => BLUE_TEAM.spawn_position,
+        };
+
+        // Update position
+        if let Ok(mut pos) = self.world.get::<&mut Position>(player_entity) {
+            pos.x = spawn_pos.x;
+            pos.y = spawn_pos.y;
+        }
+
+        // Reset velocity
+        if let Ok(mut vel) = self.world.get::<&mut Velocity>(player_entity) {
+            vel.dx = 0.0;
+            vel.dy = 0.0;
+        }
+
+        // Reset melee
+        if let Ok(mut melee) = self.world.get::<&mut Melee>(player_entity) {
+            melee.active = false;
+            melee.cooldown = 0.0;
+        }
     }
 }

@@ -105,6 +105,9 @@ async fn forward_player_inputs(
                 Input::RemovePlayer { id } => {
                     input_tx.send(Input::RemovePlayer { id }).unwrap();
                 }
+                Input::PlayerMelee { player_id } => {
+                    input_tx.send(Input::PlayerMelee { player_id }).unwrap();
+                }
             }
         } else {
             println!("Received non-binary message: {:?}", input);
