@@ -112,11 +112,12 @@ impl Game {
             .map(|(entity, (team, _))| (entity, team.clone()))
             .collect();
 
+        // Get all entities with a team and a metadata because only players have metadata.
         let all_players: Vec<(Entity, Team)> = self
             .world
-            .query::<&Team>()
+            .query::<(&Team, &Metadata)>()
             .into_iter()
-            .map(|(entity, team)| (entity, team.clone()))
+            .map(|(entity, (team, _))| (entity, team.clone()))
             .collect();
 
         // Check for melee collisions and collect players to respawn
