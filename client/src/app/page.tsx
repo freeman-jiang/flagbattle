@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+
 import Link from 'next/link';
 
 import { cn } from '@/lib/utils';
@@ -12,7 +14,14 @@ import { Button } from '@/ui/button';
  * @returns {JSX.Element} The rendered HomePage component.
  */
 const Page = () => {
-    const { team, setTeam } = useGameStore();
+    const team = useGameStore((state) => state.team);
+    const setTeam = useGameStore((state) => state.setTeam);
+    const reset = useGameStore((state) => state.reset);
+
+    useEffect(() => {
+        console.log('Resetting store');
+        reset();
+    }, [reset]);
 
     return (
         <div className='flex flex-col items-center justify-center gap-4 p-8'>

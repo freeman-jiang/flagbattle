@@ -41,7 +41,7 @@ export const Controller = () => {
     // ---------------------------------------------------------------------
     // Keyboard listeners (WASD)
     useEffect(() => {
-        const movementKeys = new Set(['w', 'a', 's', 'd'])
+        const movementKeys = new Set(['w', 'a', 's', 'd']);
 
         const recomputeAndSend = () => {
             let dx = 0;
@@ -53,6 +53,22 @@ export const Controller = () => {
 
             sendVelocity(dx, dy);
         };
+
+        // Reset all movement when window loses focus
+        const handleBlur = () => {
+            // Clear all pressed keys
+            pressed.current.clear();
+            // Send zero velocity to stop movement
+            sendVelocity(0, 0);
+        };
+
+        // Handle visibility change (tab switching)
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'hidden') {
+                handleBlur();
+            }
+        };
+
         const handleDown = (e: KeyboardEvent) => {
             const key = e.key.toLowerCase();
 
@@ -62,6 +78,7 @@ export const Controller = () => {
                     pressed.current.add(key);
                     recomputeAndSend();
                 }
+
                 return;
             }
 
@@ -83,12 +100,16 @@ export const Controller = () => {
 
         window.addEventListener('keydown', handleDown);
         window.addEventListener('keyup', handleUp);
+        window.addEventListener('blur', handleBlur);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
 
         return () => {
             window.removeEventListener('keydown', handleDown);
             window.removeEventListener('keyup', handleUp);
+            window.removeEventListener('blur', handleBlur);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
-    }, [ws]);
+    }, [ws, clientId]);
 
     return null;
 };
