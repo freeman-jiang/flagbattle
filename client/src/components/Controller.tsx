@@ -17,7 +17,6 @@ export const Controller = () => {
     const sendVelocity = (dx: number, dy: number) => {
         if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
-        console.log('sendVelocity', dx, dy);
         const msg: Input = {
             playerMove: {
                 playerId: clientId,

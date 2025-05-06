@@ -25,7 +25,6 @@ export const WebsocketManager = () => {
             ws.onmessage = async (event) => {
                 try {
                     const snapshot = decode(event.data) as Snapshot;
-                    console.log('Decoded snapshot', snapshot);
                     setSnapshot(snapshot);
                 } catch (error) {
                     console.error('Error decoding message:', error);

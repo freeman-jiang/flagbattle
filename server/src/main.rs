@@ -55,7 +55,6 @@ async fn receive_game_snapshots(
     mut snapshot_rx: broadcast::Receiver<Snapshot>,
 ) {
     while let Ok(snapshot) = snapshot_rx.recv().await {
-        println!("Received snapshot");
         let serialized_bytes = rmp_serde::to_vec_named(&snapshot).unwrap();
         let axum_bytes: axum::body::Bytes = serialized_bytes.into();
 
@@ -143,12 +142,12 @@ async fn run_game_loop(
 
         snapshot_count += 1;
         let elapsed = start_time.elapsed().as_secs_f32();
-        let player_count = game.player_map.len();
+        let snapshot = game.make_snapshot();
         println!(
-            "Sending snapshot #{} ({:.2}s) - Players: {}",
-            snapshot_count, elapsed, player_count
+            "Sending snapshot #{} ({:.2}s) - Players: {:?}",
+            snapshot_count, elapsed, snapshot.players
         );
-        let _ = snapshot_tx.send(game.make_snapshot()); // lagging clients drop
+        let _ = snapshot_tx.send(snapshot); // lagging clients drop
     }
 }
 

@@ -116,6 +116,8 @@ impl Game {
     }
 
     pub fn add_player(&mut self, id: String, team: Team) -> Entity {
+        self.remove_player(&id); // Deduplicate players
+
         let start_x = match team {
             Team::Red => RED_TEAM.spawn_position.x,
             Team::Blue => BLUE_TEAM.spawn_position.x,
@@ -146,8 +148,8 @@ impl Game {
         player_entity
     }
 
-    pub fn remove_player(&mut self, id: String) {
-        if let Some(entity) = self.player_map.remove(&id) {
+    pub fn remove_player(&mut self, id: &str) {
+        if let Some(entity) = self.player_map.remove(id) {
             let _ = self.world.despawn(entity);
         }
     }
@@ -162,7 +164,7 @@ impl Game {
             Input::CreatePlayer { team, id } => {
                 self.add_player(id, team);
             }
-            Input::RemovePlayer { id } => self.remove_player(id),
+            Input::RemovePlayer { id } => self.remove_player(&id),
             Input::PlayerMove {
                 velocity,
                 player_id,
