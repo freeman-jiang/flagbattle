@@ -90,7 +90,7 @@ export const Renderer = () => {
             height={height}
             background={'black'}
             className='h-screen w-screen'
-            resolution={window.devicePixelRatio || 1}
+            resolution={typeof window !== 'undefined' ? window.devicePixelRatio : 1}
             autoDensity={true}
             antialias={true}>
             {/* Score display */}
