@@ -347,9 +347,17 @@ impl Game {
                 player_id,
             } => {
                 let entity = self.get_player(player_id);
+                let melee = self.world.get::<&Melee>(*entity)?;
+
                 let mut player_velocity = self.world.get::<&mut Velocity>(*entity)?;
-                player_velocity.dx = velocity.dx;
-                player_velocity.dy = velocity.dy;
+                if melee.active {
+                } else if melee.cooldown > 0. {
+                    player_velocity.dx = velocity.dx * MELEE_COOLDOWN_SPEED_MULTIPLIER;
+                    player_velocity.dy = velocity.dy * MELEE_COOLDOWN_SPEED_MULTIPLIER;
+                } else {
+                    player_velocity.dx = velocity.dx;
+                    player_velocity.dy = velocity.dy;
+                }
             }
             Input::PlayerMelee { player_id } => {
                 let player = self.get_player(player_id);

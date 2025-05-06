@@ -37,6 +37,7 @@ pub struct Melee {
 pub const MELEE_COOLDOWN: f32 = 0.75;
 pub const MELEE_DURATION: f32 = 0.2;
 pub const MELEE_SPEED_MULTIPLIER: f32 = 90.0; // How much faster the player moves during attack
+pub const MELEE_COOLDOWN_SPEED_MULTIPLIER: f32 = 0.5;
 
 // Team component
 #[derive(TS, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
