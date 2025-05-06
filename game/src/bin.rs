@@ -9,8 +9,12 @@ fn main() {
     // Create game
     let mut game = Game::new();
 
-    // Add two players
+    // Add player
     let player_id1 = "Player1".to_string();
+    game.apply_input(Input::CreatePlayer {
+        id: player_id1.clone(),
+        team: game::Team::Red,
+    });
 
     // Set initial velocity for player1 (moving toward blue flag)
     game.apply_input(Input::PlayerMove {
