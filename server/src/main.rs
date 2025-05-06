@@ -131,23 +131,26 @@ async fn run_game_loop(
     let start_time = std::time::Instant::now();
 
     loop {
-        tick.tick().await;
+        tokio::select! {
+            _ = tick.tick() => {
+                // Process game tick
+                game.step(TICK_RATE);
 
-        // Drain all player commands that arrived since last frame
-        while let Ok(cmd) = input_rx.try_recv() {
-            game.apply_input(cmd).ok(); // impossible to dead-lock
+                snapshot_count += 1;
+                // let elapsed = start_time.elapsed().as_secs_f32();
+                let snapshot = game.make_snapshot();
+                // println!(
+                //     "Sending snapshot #{} ({:.2}s) - Players: {:?}",
+                //     snapshot_count, elapsed, snapshot.players
+                // );
+                let _ = snapshot_tx.send(snapshot); // lagging clients drop
+            }
+            result = input_rx.recv() => {
+                if let Some(cmd) = result {
+                    game.apply_input(cmd).ok(); // impossible to dead-lock
+                }
+            }
         }
-
-        game.step(TICK_RATE);
-
-        snapshot_count += 1;
-        let elapsed = start_time.elapsed().as_secs_f32();
-        let snapshot = game.make_snapshot();
-        println!(
-            "Sending snapshot #{} ({:.2}s) - Players: {:?}",
-            snapshot_count, elapsed, snapshot.players
-        );
-        let _ = snapshot_tx.send(snapshot); // lagging clients drop
     }
 }
 
