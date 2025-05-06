@@ -6,17 +6,16 @@ import { create } from 'zustand';
 interface GameStore {
     // NETWORK
     ws: WebSocket | null;
-    setWS: (ws: WebSocket) => void;
-
-    // LOCAL
     snapshot: Snapshot | null;
-    setSnapshot: (snapshot: Snapshot) => void;
-
     clientId: string;
-    setClientId: (clientId: string) => void;
-
     team: Team;
+
+    // FUNCTIONS
+    setWS: (ws: WebSocket) => void;
+    setSnapshot: (snapshot: Snapshot) => void;
+    setClientId: (clientId: string) => void;
     setTeam: (team: Team) => void;
+    reset: () => void;
 }
 
 // Generate a random string ID for client identification
@@ -24,16 +23,24 @@ const generateRandomId = () => {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 };
 
-export const useGameStore = create<GameStore>()((set) => ({
+// Initial state definition
+const initialState = {
     // NETWORK
     ws: null,
-    setWS: (ws) => set({ ws }),
-
-    // LOCAL
     snapshot: null,
-    setSnapshot: (snapshot) => set({ snapshot }),
     clientId: generateRandomId(),
+    team: 'red'
+} as GameStore;
+
+export const useGameStore = create<GameStore>()((set) => ({
+    ...initialState,
+
+    // NETWORK
+    setWS: (ws) => set({ ws }),
+    setSnapshot: (snapshot) => set({ snapshot }),
     setClientId: (clientId) => set({ clientId }),
-    team: 'red',
-    setTeam: (team) => set({ team })
+    setTeam: (team) => set({ team }),
+
+    // Reset to initial state
+    reset: () => set({ ...initialState, clientId: generateRandomId() })
 }));
