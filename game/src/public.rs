@@ -34,9 +34,9 @@ pub struct Melee {
     pub max_cooldown: f32,
 }
 
-pub const MELEE_COOLDOWN: f32 = 0.5; // Half a second cooldown
-pub const MELEE_DURATION: f32 = 0.2; // Duration of the attack
-pub const MELEE_SPEED_MULTIPLIER: f32 = 9.0; // How much faster the player moves during attack
+pub const MELEE_COOLDOWN: f32 = 0.75;
+pub const MELEE_DURATION: f32 = 0.2;
+pub const MELEE_SPEED_MULTIPLIER: f32 = 90.0; // How much faster the player moves during attack
 
 // Team component
 #[derive(TS, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

@@ -1,4 +1,4 @@
-use game::{Game, Input, Snapshot, Team, Velocity};
+use game::{Game, Input, Snapshot, Velocity};
 
 use std::{
     thread,
@@ -11,9 +11,6 @@ fn main() {
 
     // Add two players
     let player_id1 = "Player1".to_string();
-    let player_id2 = "Player2".to_string();
-    let player1 = game.add_player(player_id1.clone(), Team::Red);
-    let player2 = game.add_player(player_id2.clone(), Team::Blue);
 
     // Set initial velocity for player1 (moving toward blue flag)
     game.apply_input(Input::PlayerMove {

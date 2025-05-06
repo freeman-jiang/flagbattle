@@ -226,8 +226,8 @@ impl Game {
         }
         for entity in players_needing_velocity_reset {
             if let Ok(mut velocity) = self.world.get::<&mut Velocity>(entity) {
-                velocity.dx = 0.0;
-                velocity.dy = 0.0;
+                velocity.dx = 0.01;
+                velocity.dy = 0.01;
             }
         }
         // Apply velocities to positions
